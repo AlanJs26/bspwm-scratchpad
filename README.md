@@ -83,7 +83,7 @@ Here I also leaving scripts that I use to manage and keep track of the hidden wi
 
 the `rofi-scratchpad-bspwm.sh`, that is just a window picker
 
-![rofi]("./img/5.png")
+![rofi]("img/5.png")
 
 and a polybar module for displaying how many windows are currently hidden:
 
@@ -96,4 +96,4 @@ interval = 5
 click-left = <path to>/rofi-scratchpad-bspwm.sh 
 ```
 
-![polybar]("./img/6.png")
+![polybar]("img/6.png")
