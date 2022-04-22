@@ -2,7 +2,7 @@
 
 > brings the power of i3 scratchpad to bspwm
 
-this script manages the hidden windows on bspwm based on a search pattern that matches the window class or title.
+this script manages the hidden windows on bspwm based on a search pattern that matches the window's class or title.
 
 ## Usage 
 
@@ -18,7 +18,7 @@ quick access to a neovim instance
 bspwm-scratchpad "floatkitty" "kitty --title floatkittynvim nvim" --behaviour i3
 
 # matches all window with title floatkitty
-# launch a kitty window running neovim with title floatkitty if theres no matches
+# launch neovim with title of floatkitty but only when theres no matches
 ```
 
 ## Installation
@@ -28,7 +28,7 @@ bspwm-scratchpad "floatkitty" "kitty --title floatkittynvim nvim" --behaviour i3
 - wmctrl
 - rg (ripgrep)
 
-download the script. Here I'm using git
+download the script. In the code below I'm using git
 
 ```bash
 git clone 'https://github.com/AlanJs26/bspwm-scratchpad'
@@ -48,7 +48,7 @@ sudo mv bspwm-scratchpad ~/.local/bin
 
 I recommend the addition of bspc rules to automatically set windows floating state.
 
-using the example of the kitty window
+using the example of the kitty window:
 
 ```bash
 # transform all windows with title "floatkitty" into floating windows 
@@ -79,9 +79,9 @@ super + ctrl + m
 
 ### rofi and polybar
 
-Here I also leaving scripts that I use to manage and keep track of the hidden windows. They are:
+Here I also leaving scripts that I use to manage and keep track of hidden windows. They are:
 
-the `rofi-scratchpad-bspwm.sh`, that is just a window picker
+the `rofi-scratchpad-bspwm.sh`, that is just a window picker using rofi
 
 ![rofi]("img/5.png")
 
