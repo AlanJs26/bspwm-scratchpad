@@ -87,7 +87,7 @@ the `rofi-scratchpad-bspwm.sh`, that is just a window picker using rofi
 
 and a polybar module for displaying how many windows are currently hidden:
 
-```
+```ini
 [module/scratchpad]
 type = custom/script
 exec = bspc query -N -n .hidden.window|wc -l
