@@ -4,12 +4,11 @@ if [ $# = 0 ]; then
     cat <<EOF
 Usage:
 
-    $(basename "${0}") search_query [executable] [--behaviour <i3|swap|nomark>] [--negate]
+    $(basename "${0}") search_query [executable] [--behaviour <i3|swap|nomark>]
 
     search_query             the window class or window title of the target window
-    executable     (optional)   run a command when no windows are matched
-    --negate,-n    (optional)   inverse search
-    --behaviour,-b (optional)   <i3> (default)
+    executable  (optional)   run a command when no windows are matched
+    --behaviour (optional)   <i3> (default)
                               behaves just like the i3 scratchpad
                                
                              <swap>
@@ -22,51 +21,26 @@ EOF
     exit 0
 fi
 
-POSITIONAL_ARGS=()
 
-BEHAVIOUR="i3"
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    -b|--behaviour)
-      BEHAVIOUR="$2"
-      shift # past argument
-      shift # past value
-      ;;
-    -n|--negative)
-      NEGATIVE=1
-      shift # past argument with no value
-      ;;
-    -*|--*)
-      echo "Unknown option $i"
-      exit 1
-      ;;
-    *)
-      POSITIONAL_ARGS+=("$1") # save positional arg
-      shift # past argument
-      ;;
-  esac
-done
-
-set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+behaviour="${4:-i3}"
 
 # match window title and class
-if [ $NEGATIVE = 1 ];then
-    id=$(wmctrl -lx|rg -v "${1}"|awk '{ print $1 }')
-else
-    id=$(wmctrl -lx|rg "${1}"|awk '{ print $1 }')
-fi
+id=$(wmctrl -lx|grep "${1}"|awk '{ print $1 }')
 
-# execute program if theres no matches
+# stop execution if theres no matches
 if [ -z "$id" ] && ! [ -z "$2" ]; then
     ${2}
     exit
 fi
 
-rawindex=$(cat <<< "$id"|cat -n|grep -i "$(bspc query -N -n .focused.floating||echo "%#@")")
+id=$(cat <<< "$id"|cat|grep -iU "$(bspc query -N -n .floating||echo %@)")
+
+rawindex=$(cat <<< "$id"|cat -n|grep -iU "$(bspc query -N -n .focused.floating||echo %@)")
+
 
 idmarkded=$(cat <<< "$id"|rg -i "$(echo "$(bspc query -N -n .hidden.marked.window||echo "%@#")"|sed -z 's/\n\(\w\)/|\1/g')")
 
-if [ "$BEHAVIOUR" != "nomark" ];then
+if [ "$behaviour" != "nomark" ];then
     # show the marked hidden window
     if ! [ -z "$idmarkded" ];then
         bspc node $(cat <<< "$idmarkded"|head -n 1) --flag hidden=off --to-monitor focused --focus
@@ -76,17 +50,21 @@ fi
 
 
 # index of the first matched visible window 
-index=$(cat <<< "$id"|cat -n|rg -i "$(bspc query -N -n .floating.\!hidden.window|sed -z 's/\n\(\w\)/|\1/g')"|head -n 1|awk '{print $1}')
+index=$(cat <<< "$id"|cat -n|rg -i "$(bspc query -N -n .!hidden.window|sed -z 's/\n\(\w\)/|\1/g')"|head -n 1|awk '{print $1}')
 
+idhidden=$(cat <<< "$id"|cat -n|rg -i "$(bspc query -N -n .hidden.window|sed -z 's/\n\(\w\)/|\1/g')")
 
-idhidden=$(cat <<< "$id"|cat -n|rg -i "$(bspc query -N -n .floating.hidden.window|sed -z 's/\n\(\w\)/|\1/g')")
 
 # hide matched windows that are visible
-idnothidden=$(cat <<< "$id"|rg -i "$(echo "$(bspc query -N -n .floating.\!hidden.window||echo "%@#")"|sed -z 's/\n\(\w\)/|\1/g')")
+idnothidden=$(cat <<< "$id"|rg -i "$(bspc query -N -n .!hidden.window|sed -z 's/\n\(\w\)/|\1/g')")
+
+
+
 cat <<< "$idnothidden"|xargs -i bspc node {} --flag hidden=on 
 
+
 # keep the window stack position if the window loses focus
-if [ -z "$rawindex" ] && ! [ -z "$idnothidden" ] && [ "$BEHAVIOUR" != "nomark" ];then
+if [ -z "$rawindex" ] && ! [ -z "$idnothidden" ] && [ "$behaviour" != "nomark" ];then
     exit
 fi
 
@@ -94,12 +72,11 @@ fi
 cat <<< "$id"|xargs -i bspc node {} --flag marked=off 
 
 
-nextindex=$(($index))
+nextindex=$(($index+1))
 filtered=$(cat <<< "$idhidden"|awk -v nextindex="$nextindex" '$1 >= nextindex {print $2}')
 # filtered=$(cat <<< "$idhidden"|sed "${nextindex}q;d"|awk '{ print $2 }')
 
-
-if [ "$BEHAVIOUR" == "i3" ]; then
+if [ "$behaviour" == "i3" ]; then
     # if the focused window is matched, then mark the next matched window and hide the current one
     if ! [ -z "$rawindex" ];then
         bspc node $(cat <<< "$rawindex"|awk '{print $2}') --flag marked=off 
@@ -109,7 +86,7 @@ if [ "$BEHAVIOUR" == "i3" ]; then
 fi
 
 if ! [ -z "$rawindex" ] || [ -z "$idnothidden" ];then
-    if [ "$BEHAVIOUR" != "nomark" ];then
+    if [ "$behaviour" != "nomark" ];then
         # mark and show the matched window 
         bspc node "$(cat <<< "$filtered"|head -n 1)" --flag hidden  --flag marked=on --to-monitor focused --focus
     else
@@ -117,5 +94,3 @@ if ! [ -z "$rawindex" ] || [ -z "$idnothidden" ];then
         bspc node "$(cat <<< "$filtered"|head -n 1)" --flag hidden  --to-monitor focused --focus
     fi
 fi
-
-
